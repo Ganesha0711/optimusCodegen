@@ -1,0 +1,91 @@
+Below is the pyspark code for the above mapping details.
+
+import pyspark
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+
+spark = SparkSession.builder.appName("mapping").getOrCreate()
+
+# Read the source data
+source_df = spark.read.option("header", "true").csv("CUSTOMER")
+
+# Entry 1: Primary Key , Direct move from source
+source_df = source_df.withColumnRenamed("CUSTOMER_ID", "CUSTOMER_ID")
+
+# Entry 2: Direct move from source
+source_df = source_df.withColumnRenamed("FIRST_NAME", "FIRST_NAME")
+
+# Entry 3: Direct move from source
+source_df = source_df.withColumnRenamed("LAST_NAME", "LAST_NAME")
+
+# Entry 4: Direct move from source
+source_df = source_df.withColumnRenamed("GENDER", "GENDER")
+
+# Entry 5: Direct move from source
+source_df = source_df.withColumnRenamed("DATE_OF_BIRTH", "DATE_OF_BIRTH")
+
+# Entry 6: Direct move from source
+source_df = source_df.withColumnRenamed("SSN", "SOCIAL_SECURITY_NUMBER ")
+
+# Entry 7: Direct move from source
+source_df = source_df.withColumnRenamed("PERSONAL_EMAIL", "EMAIL_ADDRESS")
+
+# Entry 8: Direct move from source
+source_df = source_df.withColumnRenamed("MOBILE", "PHONE_NUMBER")
+
+# Entry 9: Direct move from source
+source_df = source_df.withColumnRenamed("MARITAL_STATUS", "MARITAL_STATUS")
+
+# Entry 10: Direct move from source
+source_df = source_df.withColumnRenamed("EDUCATION_LEVEL", "EDUCATION_LEVEL")
+
+# Entry 11: Direct move from source
+source_df = source_df.withColumnRenamed("OCCUPATION", "OCCUPATION")
+
+# Entry 12: Direct move from source
+source_df = source_df.withColumnRenamed("CUSTOMER_REGISTRATION_DATE", "CUSTOMER_REGISTRATION_DATE")
+
+# Entry 13: Direct move from source
+source_df = source_df.withColumnRenamed("CUSTOMER_SINCE ", "CUSTOMER_SINCE ")
+
+# Entry 14: Direct move from source
+source_df = source_df.withColumnRenamed("PREFERRED_PAYMENT_METHODS", "PREFERRED_PAYMENT_METHODS")
+
+# Entry 15: Direct move from source
+source_df = source_df.withColumnRenamed("LAST_INTERACTION_DATE", "LAST_INTERACTION_DATE")
+
+# Entry 16: Direct move from source
+source_df = source_df.withColumnRenamed("MAILING_ADDRESS", "MAILING_ADDRESS")
+
+# Entry 17: Surrogate Key, New column - to be created in DW
+source_df = source_df.withColumn("DIM_CUSTOMER_SK_ID", monotonically_increasing_id())
+
+# Entry 18: IF PERSONAL_ADDRESS_LINE1 ,PERSONAL_STREET, PERSONAL_ZIP_CODE  , PERSONAL_CITY , PERSONAL_STATE is Not NULL then map(bring PERSONAL_EMAIL column  from CUSTOMER table) PERSONAL_EMAIL column to EMAIL_ADDRESS \nelse \nIF   BUSINESS_ADDRESS_LINE1 ,BUSINESS_ADDRESS_STREET, BUSINESS_ADDRESS_ZIP_CODE ,BUSINESS_ADDRESS_CITY,BUSINESS_ADDRESS_STATE is Not NULL then map(bring BUSINESS_EMAIL_ADDRESS column  from CUSTOMER table) BUSINESS_EMAIL_ADDRESS column to EMAIL_ADDRESS \nelse\nNULL
+source_df = source_df.withColumn("EMAIL_ADDRESS", when(col("PERSONAL_ADDRESS_LINE1").isNotNull() & col("PERSONAL_STREET").isNotNull() & col("PERSONAL_ZIP_CODE").isNotNull() & col("PERSONAL_CITY").isNotNull() & col("PERSONAL_STATE").isNotNull(), col("PERSONAL_EMAIL")).otherwise(when(col("BUSINESS_ADDRESS_LINE1").isNotNull() & col("BUSINESS_ADDRESS_STREET").isNotNull() & col("BUSINESS_ADDRESS_ZIP_CODE").isNotNull() & col("BUSINESS_ADDRESS_CITY").isNotNull() & col("BUSINESS_ADDRESS_STATE").isNotNull(), col("BUSINESS_EMAIL_ADDRESS")).otherwise(lit(None))))
+
+# Entry 19: IF PERSONAL_ADDRESS_LINE1 is Not null then    map PERSONAL_ADDRESS_LINE1 to ADDRESS_FIELD1 \nELSE\nIF BUSINESS_ADDRESS_LINE1  is Not null then map BUSINESS_ADDRESS_LINE1 to ADDRESS_FIELD1 \nELSE NULL
+source_df = source_df.withColumn("ADDRESS_FIELD1", when(col("PERSONAL_ADDRESS_LINE1").isNotNull(), col("PERSONAL_ADDRESS_LINE1")).otherwise(when(col("BUSINESS_ADDRESS_LINE1").isNotNull(), col("BUSINESS_ADDRESS_LINE1")).otherwise(lit(None))))
+
+# Entry 20: IF PERSONAL_STREET is Not null then map PERSONAL_STREET to ADDRESS_FIELD2 \nELSE\nIF BUSINESS_ADDRESS_STREET  is Not null then map BUSINESS_ADDRESS_STREET to ADDRESS_FIELD2 \nELSE NULL
+source_df = source_df.withColumn("ADDRESS_FIELD2", when(col("PERSONAL_STREET").isNotNull(), col("PERSONAL_STREET")).otherwise(when(col("BUSINESS_ADDRESS_STREET").isNotNull(), col("BUSINESS_ADDRESS_STREET")).otherwise(lit(None))))
+
+# Entry 21: IF PERSONAL_ZIP_CODE is Not null then  map PERSONAL_ZIP_CODE to POSTAL_CODE \nELSE\nIF BUSINESS_ADDRESS_ZIP_CODE  is Not null then  map BUSINESS_ADDRESS_ZIP_CODE to POSTAL_CODE \nELSE NULL
+source_df = source_df.withColumn("POSTAL_CODE", when(col("PERSONAL_ZIP_CODE").isNotNull(), col("PERSONAL_ZIP_CODE")).otherwise(when(col("BUSINESS_ADDRESS_ZIP_CODE").isNotNull(), col("BUSINESS_ADDRESS_ZIP_CODE")).otherwise(lit(None))))
+
+# Entry 22: IF PERSONAL_CITY is Not null then  map PERSONAL_CITY to CITY_NAME \nELSE\nIF BUSINESS_ADDRESS_CITY  is Not null then  map BUSINESS_ADDRESS_CITY to CITY_NAME \nELSE NULL
+source_df = source_df.withColumn("CITY_NAME", when(col("PERSONAL_CITY").isNotNull(), col("PERSONAL_CITY")).otherwise(when(col("BUSINESS_ADDRESS_CITY").isNotNull(), col("BUSINESS_ADDRESS_CITY")).otherwise(lit(None))))
+
+# Entry 23: IF PERSONAL_ADDRESS_LINE1 is Not null then    map PERSONAL_ADDRESS_LINE1 to ADDRESS_FIELD1 \nELSE\nIF BUSINESS_ADDRESS_LINE1  is Not null then map BUSINESS_ADDRESS_LINE1 to ADDRESS_FIELD1 \nELSE NULL
+source_df = source_df.withColumn("ADDRESS_FIELD1", when(col("PERSONAL_ADDRESS_LINE1").isNotNull(), col("PERSONAL_ADDRESS_LINE1")).otherwise(when(col("BUSINESS_ADDRESS_LINE1").isNotNull(), col("BUSINESS_ADDRESS_LINE1")).otherwise(lit(None))))
+
+# Entry 24: IF PERSONAL_STREET is Not null then 'Personal'  and map PERSONAL_STREET to ADDRESS_FIELD2 \nELSE\nIF BUSINESS_ADDRESS_STREET  is Not null then 'Business' and map BUSINESS_ADDRESS_STREET to ADDRESS_FIELD2 \nELSE NULL
+source_df = source_df.withColumn("ADDRESS_FIELD2", when(col("PERSONAL_STREET").isNotNull(), lit("Personal") & col("PERSONAL_STREET")).otherwise(when(col("BUSINESS_ADDRESS_STREET").isNotNull(), lit("Business") & col("BUSINESS_ADDRESS_STREET")).otherwise(lit(None))))
+
+# Entry 25: IF PERSONAL_ZIP_CODE is Not null then  map PERSONAL_ZIP_CODE to POSTAL_CODE \nELSE\nIF BUSINESS_ADDRESS_ZIP_CODE  is Not null then  map BUSINESS_ADDRESS_ZIP_CODE to POSTAL_CODE \nELSE NULL
+source_df = source_df.withColumn("POSTAL_CODE", when(col("PERSONAL_ZIP_CODE").isNotNull(), col("PERSONAL_ZIP_CODE")).otherwise(when(col("BUSINESS_ADDRESS_ZIP_CODE").isNotNull(), col("BUSINESS_ADDRESS_ZIP_CODE")).otherwise(lit(None))))
+
+# Entry 26: IF PERSONAL_CITY is Not null then  map PERSONAL_CITY to CITY_NAME \nELSE\nIF BUSINESS_ADDRESS_CITY  is Not null then  map BUSINESS_ADDRESS_CITY to CITY_NAME \nELSE NULL
+source_df = source_df.withColumn("CITY_NAME", when(col("PERSONAL_CITY").isNotNull(), col("PERSONAL_CITY")).otherwise(when(col("BUSINESS_ADDRESS_CITY").isNotNull(), col("BUSINESS_ADDRESS_CITY")).otherwise(lit(None))))
+
+# Entry 27: Concat(INSTA_HANDEL ||'',''||FACEBOOK_HANDEL||'',''||TWITTER_HANDLE) populate SOCIAL_MEDIA_PROFILES  column only once . Mentioned it twice for understanding
+source_df = source_df.withColumn("SOCIAL_MEDIA_PROFILES", concat_ws("", col("INSTA_HANDLE"), col("

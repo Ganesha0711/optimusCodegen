@@ -1,0 +1,123 @@
+Below is the pytest test cases for the above python code.
+
+import pytest
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, lpad
+
+@pytest.fixture(scope="module")
+def spark_session():
+    return SparkSession.builder.master("local[*]").appName("test").getOrCreate()
+
+def test_read_source(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    assert source_df.count() > 0
+
+def test_primary_key(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("CUSTOMER_ID", "CUSTOMER_ID")
+    assert "CUSTOMER_ID" in result_df.schema.names
+    assert result_df.schema["CUSTOMER_ID"].dataType == "string"
+
+def test_direct_move_first_name(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("FIRST_NAME", "FIRST_NAME")
+    assert "FIRST_NAME" in result_df.schema.names
+    assert result_df.schema["FIRST_NAME"].dataType == "string"
+
+def test_direct_move_last_name(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("LAST_NAME", "LAST_NAME")
+    assert "LAST_NAME" in result_df.schema.names
+    assert result_df.schema["LAST_NAME"].dataType == "string"
+
+def test_direct_move_gender(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("GENDER", "GENDER")
+    assert "GENDER" in result_df.schema.names
+    assert result_df.schema["GENDER"].dataType == "string"
+
+def test_direct_move_date_of_birth(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("DATE_OF_BIRTH", "DATE_OF_BIRTH")
+    assert "DATE_OF_BIRTH" in result_df.schema.names
+    assert result_df.schema["DATE_OF_BIRTH"].dataType == "date"
+
+def test_direct_move_ssn(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("SSN", "SOCIAL_SECURITY_NUMBER ")
+    assert "SOCIAL_SECURITY_NUMBER " in result_df.schema.names
+    assert result_df.schema["SOCIAL_SECURITY_NUMBER "].dataType == "string"
+
+def test_direct_move_email_address(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("PERSONAL_EMAIL", "EMAIL_ADDRESS")
+    assert "EMAIL_ADDRESS" in result_df.schema.names
+    assert result_df.schema["EMAIL_ADDRESS"].dataType == "string"
+
+def test_direct_move_phone_number(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("MOBILE", "PHONE_NUMBER")
+    assert "PHONE_NUMBER" in result_df.schema.names
+    assert result_df.schema["PHONE_NUMBER"].dataType == "string"
+
+def test_direct_move_marital_status(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("MARITAL_STATUS", "MARITAL_STATUS")
+    assert "MARITAL_STATUS" in result_df.schema.names
+    assert result_df.schema["MARITAL_STATUS"].dataType == "string"
+
+def test_direct_move_education_level(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("EDUCATION_LEVEL", "EDUCATION_LEVEL")
+    assert "EDUCATION_LEVEL" in result_df.schema.names
+    assert result_df.schema["EDUCATION_LEVEL"].dataType == "string"
+
+def test_direct_move_occupation(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("OCCUPATION", "OCCUPATION")
+    assert "OCCUPATION" in result_df.schema.names
+    assert result_df.schema["OCCUPATION"].dataType == "string"
+
+def test_direct_move_customer_registration_date(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("CUSTOMER_REGISTRATION_DATE", "CUSTOMER_REGISTRATION_DATE")
+    assert "CUSTOMER_REGISTRATION_DATE" in result_df.schema.names
+    assert result_df.schema["CUSTOMER_REGISTRATION_DATE"].dataType == "date"
+
+def test_direct_move_customer_since(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("CUSTOMER_SINCE ", "CUSTOMER_SINCE ")
+    assert "CUSTOMER_SINCE " in result_df.schema.names
+    assert result_df.schema["CUSTOMER_SINCE "].dataType == "date"
+
+def test_direct_move_preferred_payment_methods(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("PREFERRED_PAYMENT_METHODS", "PREFERRED_PAYMENT_METHODS")
+    assert "PREFERRED_PAYMENT_METHODS" in result_df.schema.names
+    assert result_df.schema["PREFERRED_PAYMENT_METHODS"].dataType == "string"
+
+def test_direct_move_last_interaction_date(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("LAST_INTERACTION_DATE", "LAST_INTERACTION_DATE")
+    assert "LAST_INTERACTION_DATE" in result_df.schema.names
+    assert result_df.schema["LAST_INTERACTION_DATE"].dataType == "date"
+
+def test_direct_move_mailing_address(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumnRenamed("MAILING_ADDRESS", "MAILING_ADDRESS")
+    assert "MAILING_ADDRESS" in result_df.schema.names
+    assert result_df.schema["MAILING_ADDRESS"].dataType == "string"
+
+def test_surrogate_key(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumn("DIM_CUSTOMER_SK_ID", col("DIM_CUSTOMER_SK_ID"))
+    assert "DIM_CUSTOMER_SK_ID" in result_df.schema.names
+    assert result_df.schema["DIM_CUSTOMER_SK_ID"].dataType == "bigint"
+
+def test_email_address(spark_session):
+    source_df = spark_session.read.option("header", "true").csv("CUSTOMER")
+    result_df = source_df.withColumn("EMAIL_ADDRESS", when(col("PERSONAL_ADDRESS_LINE1").isNotNull() & col("PERSONAL_STREET").isNotNull() & col("PERSONAL_ZIP_CODE").isNotNull() & col("PERSONAL_CITY").isNotNull() & col("PERSONAL_STATE").isNotNull(), col("PERSONAL_EMAIL")).otherwise(when(col("BUSINESS_ADDRESS_LINE1").isNotNull() & col("BUSINESS_ADDRESS_STREET").isNotNull() & col("BUSINESS_ADDRESS_ZIP_CODE").isNotNull() & col("BUSINESS_ADDRESS_CITY").isNotNull() & col("BUSINESS_ADDRESS_STATE").isNotNull(), col("BUSINESS_EMAIL_ADDRESS")).otherwise(lit(None))))
+    assert "EMAIL_ADDRESS" in result_df.schema.names
+    assert result_df.schema["EMAIL_ADDRESS"].dataType == "string"
+
+def test_address_field
